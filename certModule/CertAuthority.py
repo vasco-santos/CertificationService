@@ -2,7 +2,6 @@ import time
 import Pyro4
 
 from M2Crypto import X509, RSA, EVP, BIO, ASN1
-from Crypto.Hash import SHA
 
 
 class CertificationAuthority(object):
@@ -21,19 +20,26 @@ class CertificationAuthority(object):
     def validSelfSignedCertificate(self):
         return self.cert.check_ca() and self.cert.verify(self.cert.get_pubkey())
 
-    def signData(self, data):
-        self.signEVP.sign_init()
-        self.signEVP.sign_update(SHA.new(str(data)).digest())
-        return self.signEVP.sign_final().encode('hex')
+    def validCertificate(self, certificate):
+        cert = X509.load_cert_string(certificate.decode('hex'))
+        return cert.verify(self.cert.get_pubkey())
 
-    # TO TEST
+    def signData(self, data):
+        msgDigest = EVP.MessageDigest('sha1')
+        msgDigest.update(str(data))
+        self.signEVP.sign_init()
+        self.signEVP.sign_update(msgDigest.digest())
+        return self.signEVP.sign_final().encode('base64')
+
     def validSignedData(self, data, signature, certificate):
+        msgDigest = EVP.MessageDigest('sha1')
+        msgDigest.update(str(data))
         pub_key = X509.load_cert_string(certificate.decode('hex')).get_pubkey().get_rsa()
         verifyEVP = EVP.PKey()
         verifyEVP.assign_rsa(pub_key)
         verifyEVP.verify_init()
-        verifyEVP.verify_update(SHA.new(str(data)).digest())
-        return verifyEVP.verify_final(signature.decode('hex'))
+        verifyEVP.verify_update(msgDigest.digest())
+        return verifyEVP.verify_final(str(signature.decode('base64')))
 
     def createSignedCertificate(self, peer_id, pub_key, expiration_time):
         # Public Key to certificate
@@ -64,3 +70,6 @@ class CertificationAuthority(object):
         cert.sign(self.signEVP, md="sha1")
         #cert.save_pem("peer_CA.pem")
         return cert.as_pem().encode('hex')
+
+    def getPublicKey(self):
+        return self.cert.get_pubkey().get_rsa().as_pem().encode('hex')
