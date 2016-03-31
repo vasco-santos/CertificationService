@@ -36,6 +36,18 @@ if ca.validSelfSignedCertificate():
         if cs.validCertificateAuthoritySignedData(json.dumps(data), signature):
             print("CS: Valid Data Signed Received")
 
+        # CA Cipher Data.
+        cipherData = ca.encryptData(json.dumps(data))
+        print("CA: Data encrypted")
+
+        # CA Data Encrypted Signing.
+        cipherSignature = ca.signEncryptedData(cipherData)
+        print("CA: Data Encrypted Signed")
+
+        # CS Signature Validation for Encrypted Data.
+        if cs.validCertificationAuthoritySignedEncryptedData(cipherData, cipherSignature):
+            print("CS: Valid Data Encrypted Signed")
+
         pub_key = cs.getPublicKey()
         print("CS: Received Public Key")
 
@@ -48,7 +60,7 @@ if ca.validSelfSignedCertificate():
         if cs.validCertificate(peer_cert):
             print("CS: Certificate is valid")
 
-            # CS Data Signing-
+            # CS Data Signing.
             signature = cs.signData(json.dumps(data))
             print ("CS: Data Signed")
 
@@ -56,3 +68,15 @@ if ca.validSelfSignedCertificate():
             if ca.validCertificate(peer_cert) and \
                     ca.validSignedData(json.dumps(data), signature, peer_cert):
                 print("CA: Valid Data Signed Received")
+
+            # CS Cipher Data.
+            cipherData = cs.encryptData(json.dumps(data))
+            print("CS: Data encrypted")
+
+            # CS Data Encrypted Signing.
+            cipherSignature = cs.signEncryptedData(cipherData)
+            print("CS: Data Encrypted Signed")
+
+            # CA Signature Validation for Encrypted Data.
+            if ca.validSignedEncryptedData(cipherData, cipherSignature, peer_cert):
+                print("CS: Valid Data Encrypted Signed")

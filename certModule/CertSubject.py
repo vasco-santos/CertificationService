@@ -43,6 +43,16 @@ class CertificationSubject(object):
         self.verifyEVP = EVP.PKey()
         self.verifyEVP.assign_rsa(self.ca_cert.get_pubkey().get_rsa())
 
+    def encryptData(self, data):
+        return self.priv_key.private_encrypt(str(data), RSA.pkcs1_padding).encode('base64')
+
+    def signEncryptedData(self, cipherData):
+        msgDigest = EVP.MessageDigest('sha1')
+        msgDigest.update(cipherData.decode('base64'))
+        self.signEVP.sign_init()
+        self.signEVP.sign_update(msgDigest.digest())
+        return self.signEVP.sign_final().encode('base64')
+
     def validCertificationAuthorityCertificate(self):
         """ Verify if the self-signed CA certificate was not corrupted.
 
@@ -110,6 +120,13 @@ class CertificationSubject(object):
         """
         msgDigest = EVP.MessageDigest('sha1')
         msgDigest.update(str(data))
+        self.verifyEVP.verify_init()
+        self.verifyEVP.verify_update(msgDigest.digest())
+        return self.verifyEVP.verify_final(signature.decode('base64'))
+
+    def validCertificationAuthoritySignedEncryptedData(self, cipherData, signature):
+        msgDigest = EVP.MessageDigest('sha1')
+        msgDigest.update(cipherData.decode('base64'))
         self.verifyEVP.verify_init()
         self.verifyEVP.verify_update(msgDigest.digest())
         return self.verifyEVP.verify_final(signature.decode('base64'))

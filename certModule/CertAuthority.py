@@ -39,6 +39,27 @@ class CertificationAuthority(object):
         self.signEVP = EVP.PKey()
         self.signEVP.assign_rsa(self.priv_key)
 
+    def encryptData(self, data):
+        return self.priv_key.private_encrypt(str(data), RSA.pkcs1_padding).encode('base64')
+
+    def signEncryptedData(self, cipherData):
+        msgDigest = EVP.MessageDigest('sha1')
+        msgDigest.update(cipherData.decode('base64'))
+        self.signEVP.sign_init()
+        self.signEVP.sign_update(msgDigest.digest())
+        return self.signEVP.sign_final().encode('base64')
+
+    # TO TEST
+    def validSignedEncryptedData(self, cipherData, signature, certificate):
+        msgDigest = EVP.MessageDigest('sha1')
+        msgDigest.update(cipherData.decode('base64'))
+        pub_key = X509.load_cert_string(certificate.decode('hex')).get_pubkey().get_rsa()
+        verifyEVP = EVP.PKey()
+        verifyEVP.assign_rsa(pub_key)
+        verifyEVP.verify_init()
+        verifyEVP.verify_update(msgDigest.digest())
+        return verifyEVP.verify_final(str(signature.decode('base64')))
+
     def validSelfSignedCertificate(self):
         """ Verify if the self-signed CA certificate was not corrupted.
 
