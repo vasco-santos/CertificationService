@@ -35,9 +35,9 @@ class CertificationAuthority(object):
         verifyEVP.verify_update(SHA.new(str(data)).digest())
         return verifyEVP.verify_final(signature.decode('hex'))
 
-    def createignedCertificate(self, peer_id, peer_cert, expiration_time):
+    def createSignedCertificate(self, peer_id, pub_key, expiration_time):
         # Public Key to certificate
-        bio = BIO.MemoryBuffer(str(peer_cert))
+        bio = BIO.MemoryBuffer(str(pub_key.decode('hex')))
         pub_key = RSA.load_pub_key_bio(bio)
         pkey = EVP.PKey()
         pkey.assign_rsa(pub_key)

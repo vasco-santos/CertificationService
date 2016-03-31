@@ -20,11 +20,23 @@ if ca.validSelfSignedCertificate():
         print ("CS: Valid CA Received Certification")
 
         data = ['aaa', 'bbb']
+
+        # CA Sign
         signature = ca.signData(json.dumps(data))
         print ("CA: Data Signed")
 
         if cs.validCertificateAuthoritySignedData(json.dumps(data), signature):
             print("CS: Valid Data Signed Received")
 
+        # Peer Sign
+
+        pub_key = cs.getPublicKey()
+        print("CS: Received Public Key")
+
+        peer_cert = ca.createSignedCertificate("awda10wd25aw5d1wa", pub_key, 60)
+        print("CA: Created Signed Certificate for Peer")
+
+        if cs.validCertificate(peer_cert):
+            print("CS: Certificate is valid")
 
 

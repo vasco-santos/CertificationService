@@ -47,3 +47,6 @@ class CertificationSubject(object):
         verifyEVP.verify_init()
         verifyEVP.verify_update(SHA.new(str(data)).digest())
         return verifyEVP.verify_final(signature.decode('hex'))
+
+    def getPublicKey(self):
+        return self.cert.as_pem().encode('hex')
