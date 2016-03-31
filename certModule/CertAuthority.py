@@ -28,7 +28,7 @@ class CertificationAuthority(object):
 
     # TO TEST
     def validSignedData(self, data, signature, certificate):
-        pub_key = X509.load_cert_string(certificate.decode('hex')).get_pubkey()
+        pub_key = X509.load_cert_string(certificate.decode('hex')).get_pubkey().get_rsa()
         verifyEVP = EVP.PKey()
         verifyEVP.assign_rsa(pub_key)
         verifyEVP.verify_init()

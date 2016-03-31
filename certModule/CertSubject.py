@@ -33,7 +33,15 @@ class CertificationSubject(object):
 
     # TO TEST
     def validSignedData(self, data, signature, certificate):
-        pub_key = X509.load_cert_string(certificate.decode('hex')).get_pubkey()
+        pub_key = X509.load_cert_string(certificate.decode('hex')).get_pubkey().get_rsa()
+        verifyEVP = EVP.PKey()
+        verifyEVP.assign_rsa(pub_key)
+        verifyEVP.verify_init()
+        verifyEVP.verify_update(SHA.new(str(data)).digest())
+        return verifyEVP.verify_final(signature.decode('hex'))
+
+    def validCertificateAuthoritySignedData(self, data, signature):
+        pub_key = self.ca_cert.get_pubkey().get_rsa()
         verifyEVP = EVP.PKey()
         verifyEVP.assign_rsa(pub_key)
         verifyEVP.verify_init()
