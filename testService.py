@@ -39,19 +39,19 @@ if ca.validSelfSignedCertificate():
         if cs.validCertificateAuthoritySignedData(json.dumps(data), signature):
             print("CS: Valid Data Signed Received")
 
-        pub_key = cs.getPublicKey()
+        cs_pub_key = cs.getPublicKey()
         print("CS: Received Public Key")
 
         # CA issues a subject certificate, signed with its private key.
         lifetime = 60
-        peer_cert = ca.createSignedCertificate("awda10wd25aw5d1wa", pub_key, lifetime)
+        peer_cert = ca.createSignedCertificate("awda10wd25aw5d1wa", cs_pub_key, lifetime)
         print("CA: Created Signed Certificate for Peer")
 
         # CS Validates its certificate (signed by the CA).
         if cs.validCertificate(peer_cert):
             print("CS: Certificate is valid")
 
-            # CS Data Signing-
+            # CS Data Signing.
             signature = cs.signData(json.dumps(data))
             print ("CS: Data Signed")
 
@@ -59,3 +59,34 @@ if ca.validSelfSignedCertificate():
             if ca.validCertificate(peer_cert) and \
                     ca.validSignedData(json.dumps(data), signature, peer_cert):
                 print("CA: Valid Data Signed Received")
+
+            # CIPHERS
+            # CA Cipher Data.
+            cipherData = ca.encryptData(json.dumps(data), peer_cert)
+            print("CA: Data encrypted")
+
+            # CA Data Encrypted Signing.
+            cipherSignature = ca.signEncryptedData(cipherData)
+            print("CA: Data Encrypted Signed")
+
+            # CS Signature Validation for Encrypted Data.
+            if cs.validCertificationAuthoritySignedEncryptedData(cipherData, cipherSignature):
+                print("CS: Valid Data Encrypted Signed")
+
+                decrypt_data = cs.decryptData(cipherData)
+                print("CS: Data decrypted - " + str(decrypt_data))
+
+            # CS Cipher Data.
+            cipherData = cs.encryptDataForCA(json.dumps(data))
+            print("CS: Data encrypted")
+
+            # CS Data Encrypted Signing.
+            cipherSignature = cs.signEncryptedData(cipherData)
+            print("CS: Data Encrypted Signed")
+
+            # CA Signature Validation for Encrypted Data.
+            if ca.validSignedEncryptedData(cipherData, cipherSignature, peer_cert):
+                print("CA: Valid Data Encrypted Signed")
+
+                decrypt_data = ca.decryptData(cipherData)
+                print("CA: Data decrypted - " + str(decrypt_data))
